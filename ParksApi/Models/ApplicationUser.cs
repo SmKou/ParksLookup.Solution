@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace ParksApi.Models;
@@ -10,9 +11,6 @@ public class ApplicationUser : IdentityUser
     // Email
     [Required]
     public string Name { get; set; }
-    [required]
-    [DataType(DataType.PhoneNumber)]
-    public string PhoneNumber { get; set; }
     [Required]
     public int ParkId { get; set; }
     [Required]

@@ -21,7 +21,7 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ParksContext>(
     dbContextOptions => dbContextOptions.UseMySql(
         builder.Configuration["ConnectionStrings:DefaultConnection"],
-        ServiceVersion.AutoDetect(builder.Configuration["ConnectionStrings:DefaultConnection"])
+        ServerVersion.AutoDetect(builder.Configuration["ConnectionStrings:DefaultConnection"])
     )
 );
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
