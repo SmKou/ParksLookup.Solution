@@ -28,23 +28,55 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Seed([FromBody] SeedViewModel seed)
+    public async Task<ActionResult> Seed([FromBody] SeedInputModel seed)
     {
         if (!ModelState.IsValid && !_db.Parks.Any() && !_db.Centers.Any())
         {
-            SeedViewModel.Seed(_db);
+            SeedInputModel.Seed(_db);
             return NoContent("Database seeded.");
         }
 
         if (!ModelState.IsValid)
-        {
+            return UnprocessableEntity(ModelState);
 
+        Park park = new Park
+        {
+            Name = seed.ParkName,
+            Description = seed.Description,
+            State = seed.State.ToLower(),
+            Directions = seed.Directions
+        };
+        _db.Parks.Add(park);
+        _db.SaveChanges();
+        ApplicationUser user = new ApplicationUser
+        {
+            UserName = seed.UserName,
+            Email = seed.Email,
+            Name = seed.GivenName,
+            ParkId = park.ParkId,
+            IsConfirmedEmployee = true
+        };
+        IdentityResult result = await _userManager.CreateAsync(user, seed.Password);
+        if (result.Succeeded)
+        {
+            SignInResult signin = await _signinManager.PasswordSignInAsync(user.UserName, user.Password, isPersistent: true, lockoutOnFailure: false);
+            if (signin.Succeeded)
+                return Ok(GenerateJSONWebToken())
+            else
+                return StatusCode(StatusCodes.Status500InternalServerError, signin.Failed)
+        }
+        else
+        {
+            foreach (IdentityError error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+            return UnprocessableEntity(ModelState);
         }
     }
 
     [HttpPost]
     public async Task<ActionResult> Register([FromBody] UserInputModel register)
     {
+        
         return NoContent();
     }
 
@@ -59,5 +91,18 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Put(int id, [FromBody] LoginInputModel login)
     {
         return NoContent();
+    }
+
+    private string GenerateJSONWebToken()
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Kou.dBlueParks"));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: "http://localhost:5006",
+            audience: "http://localhost:5006",
+            expires: DateTime.Now.AddHours(1);
+            signingCredentials: credentials
+        );
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

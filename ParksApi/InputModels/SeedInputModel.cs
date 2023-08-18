@@ -3,7 +3,7 @@ namespace ParksApi.InputModels;
 public class SeedInputModel
 {
     [Required]
-    public string Name { get; set; }
+    public string ParkName { get; set; }
     [Required]
     public string Description { get; set; }
     [Required]
@@ -16,7 +16,9 @@ public class SeedInputModel
     [Required]
     public string Email { get; set; }
     [Required]
-    public string Name { get; set; }
+    public string GivenName { get; set; }
+    [Required]
+    public string Password { get; set; }
 
     public static Seed(ParksContext db)
     {
