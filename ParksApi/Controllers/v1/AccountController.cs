@@ -28,20 +28,35 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Register([FromBody] RegisterViewModel register)
+    public async Task<ActionResult> Seed([FromBody] SeedViewModel seed)
+    {
+        if (!ModelState.IsValid && !_db.Parks.Any() && !_db.Centers.Any())
+        {
+            SeedViewModel.Seed(_db);
+            return NoContent("Database seeded.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Register([FromBody] UserInputModel register)
     {
         return NoContent();
     }
 
     [HttpPost]
-    public async Task<ActionResult> Login([FromBody] LoginViewModel login)
+    public async Task<ActionResult> Login([FromBody] LoginInputModel login)
     {
         return NoContent();
     }
 
     [Authorize]
     [HttpPut]
-    public async Task<IActionResult> Put(int id, [FromBody] LoginViewModel login)
+    public async Task<IActionResult> Put(int id, [FromBody] LoginInputModel login)
     {
         return NoContent();
     }
