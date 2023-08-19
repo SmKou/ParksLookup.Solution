@@ -13,6 +13,7 @@ public class VisitorCenter
     [Required]
     public string MailingAddress { get; set; }
     [Required]
+    [RegularExpression(@"^[1-9]\d{2}-[1-9]\d{2}-\d{4}$", ErrorMessage = "Enter a valid phone number")]
     public string PhoneNumber { get; set; }
     [Required]
     public int ParkId { get; set; }
