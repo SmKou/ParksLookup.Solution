@@ -45,8 +45,8 @@ public class ParksController : ControllerBase
             return Ok(park);
     }
 
-    [HttpPost]
     [Authorize]
+    [HttpPost]
     public async Task<ActionResult<Park>> Post([FromBody] Park park)
     {
         return NoContent();

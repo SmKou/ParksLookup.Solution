@@ -9,6 +9,7 @@ using System.Security.Claims;
 
 using ParksApi.Models;
 using ParksApi.InputModels;
+using ParksApi.ViewModels;
 
 namespace ParksApi.Controllers;
 
@@ -28,14 +29,84 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> Get()
+    public async Task<ActionResult> Get([FromQuery] string purpose,
+    string name, string username, int parkid, int pageSize, int pageIndex)
     {
-        if (!_db.Parks.Any() && !_db.Centers.Any())
+        if (purpose == "seed")
         {
-            SeedInputModel.Seed(_db);
-            return Ok("Database modeled.");
+            if (!_db.Parks.Any() && !_db.Centers.Any())
+            {
+                SeedInputModel.Seed(_db);
+                return Ok("Data seeded.");
+            }
+            else
+                return BadRequest("Data already seeded.");
         }
-        return NoContent();
+        
+        if (purpose == "lookup")
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ApplicationUser user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !user.IsConfirmedEmployee)
+                return Unauthorized();
+
+            if (string.IsNullOrEmpty(name))
+                name = "";
+            if (string.IsNullOrEmpty(username))
+                username = "";
+
+            IQueryable<UserViewModel> query = _db.Users
+                .AsQueryable()
+                .OrderBy(entry => entry.GivenName)
+                .Where(entry => entry.NormalizedUserName.Contains(username) && entry.GivenName.Contains(name))
+                .Select(user => new UserViewModel
+                {
+                    UserId = user.Id,
+                    FullName = user.GivenName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    ParkId = user.ParkId
+                });
+
+            if (parkid != 0 && _db.Parks.Any(park => park.ParkId == parkid))
+                query = query.Where(entry => entry.ParkId == parkid);
+
+            return await PaginatedList<UserViewModel>.CreateAsync(query, pageIndex, pageSize);
+        }
+
+        return BadRequest("A purpose must be provided.");
+    }
+
+    [Authorize]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserViewModel>> GetAccount(int id)
+    {
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        ApplicationUser account = await _userManager.FindByIdAsync(userId);
+        if (account == null)
+            return Unauthorized();
+
+        ApplicationUser user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+            return NotFound();
+
+        UserViewModel model = new UserViewModel
+        {
+            UserId = user.Id,
+            FullName = user.GivenName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            ParkId = user.ParkId
+        };
+        return Ok(model);
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<ActionResult> Post([FromBody] UserInputModel model)
+    {
+        TempData["Confirmed"] = true;
+        return RedirectToRoute(new { action = "Register", controller = "Register", model = model });
     }
 
     [Authorize]
@@ -55,10 +126,10 @@ public class AccountController : ControllerBase
             return NotFound("Data Invalid: Account does not exist.");
         string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-            return NotFound("Data Invalid: Account does not exist.");
+        if (user.Id != id)
+            return Unauthorized("Cannot modify another user's account.");
         if (user.UserName != model.UserName && user.Email != model.Email)
-            return BadRequest("Update Failed: Cannot change both username and email.");
+            return BadRequest("Update Invalid: Cannot change both username and email.");
 
         if (user.UserName != model.UserName)
             user.UserName = model.UserName;
@@ -81,6 +152,17 @@ public class AccountController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [Authorize]
+    [HttpDelete]
+    public async Task<ActionResult> Delete(int id)
+    {
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        ApplicationUser user = await _userManager.FindByIdAsync(userId);
+        if (user.Id != id)
+            return Unauthorized("Cannot delete another user's account.");
+        return await _userManager.DeleteAsync(user);
     }
 
     public static string GenerateJSONWebToken()
@@ -110,6 +192,20 @@ public class SeedController : ControllerBase
         _db = db;
         _userManager = userManager;
         _signinManager = signinManager;
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<ActionResult> Get()
+    {
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        ApplicationUser user = await _userManager.FindByIdAsync(userId);
+        user.IsConfirmedEmployee = true;
+        IdentityResult result = await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+            return Ok("Confirmed");
+        else
+            return StatusCode(418);
     }
 
     [HttpPost]
@@ -187,7 +283,7 @@ public class RegisterController : ControllerBase
             PhoneNumber = model.PhoneNumber,
             GivenName = model.GivenName,
             ParkId = model.ParkId,
-            IsConfirmedEmployee = false
+            IsConfirmedEmployee = TempData["Confirmed"] != null ? TempData["Confirmed"] : false
         };
         IdentityResult result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
@@ -221,7 +317,7 @@ public class LoginController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Login([FromBody] LoginInputModel login)
+    public async Task<ActionResult> Post([FromBody] LoginInputModel login)
     {
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
@@ -241,5 +337,17 @@ public class LoginController : ControllerBase
             ModelState.AddModelError("Login Failed", "There is something wrong with your login or password.");
             return UnprocessableEntity(ModelState);
         }
+    }
+
+    [Authorize]
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        ApplicationUser user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return NotFound();
+        await _signinManager.SignOutAsync();
+        return Ok("User logged out.")
     }
 }

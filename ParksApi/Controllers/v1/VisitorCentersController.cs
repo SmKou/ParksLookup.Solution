@@ -1,6 +1,6 @@
 using ParksApi.Models;
 
-namespace ParksApi.Contorllers;
+namespace ParksApi.Controllers;
 
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiVersion("1.0")]
