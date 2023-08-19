@@ -14,15 +14,31 @@ public class VisitorCentersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<VisitorCenter>>> Get([FromQuery] string name, string park)
+    public async Task<ActionResult<IEnumerable<VisitorCenter>>> Get([FromQuery] string name, int parkId, string sortOrder, int pageSize, int pageIndex)
     {
-        return NoContent();
+        IQueryable<VisitorCenter> query = _db.Centers.AsQueryable();
+        if (!string.IsNullOrEmpty(name))
+            query = query.Where(entry => entry.CenterName.Contains(name));
+        if (parkId > 0)
+            query = query.Where(entry => entry.ParkId == parkId);
+        if (!string.IsNullOrEmpty(sortOrder))
+        {
+            if (sortOrder == "desc")
+                query = query.OrderByDescending(entry => entry.CenterName);
+            else
+                query = query.OrderBy(entry => entry.CenterName);
+        }
+        return await PaginatedList<VisitorCenter>.CreateAsync(query, pageIndex, pageSize);
     }
 
     [HttpGet("id")]
     public async Task<ActionResult<VisitorCenter>> GetCenter(int id)
     {
-        return NoContent();
+        VisitorCenter center = await _db.Centers.FindAsync(id);
+        if (center == null)
+            return NotFound();
+        else
+            return Ok(center);
     }
 
     [Authorize]

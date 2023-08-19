@@ -11,7 +11,7 @@ public class ApplicationUser : IdentityUser
     // Email
     // PhoneNumber
     [Required]
-    public string Name { get; set; }
+    public string GivenName { get; set; }
     [Required]
     public int ParkId { get; set; }
     [Required]

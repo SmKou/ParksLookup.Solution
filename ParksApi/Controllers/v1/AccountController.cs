@@ -41,7 +41,7 @@ public class AccountController : ControllerBase
 
         Park park = new Park
         {
-            Name = seed.ParkName,
+            ParkName = seed.ParkName,
             Description = seed.Description,
             State = seed.State.ToLower(),
             Directions = seed.Directions
@@ -52,7 +52,7 @@ public class AccountController : ControllerBase
         {
             UserName = seed.UserName,
             Email = seed.Email,
-            Name = seed.GivenName,
+            GivenName = seed.GivenName,
             ParkId = park.ParkId,
             IsConfirmedEmployee = true
         };

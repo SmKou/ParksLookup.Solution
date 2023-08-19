@@ -6,7 +6,7 @@ public class Park
 {
     public int ParkId { get; set; }
     [Required]
-    public string Name { get; set; }
+    public string ParkName { get; set; }
     [Required]
     public string Description { get; set; }
     [Required]

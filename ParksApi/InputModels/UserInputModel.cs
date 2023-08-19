@@ -9,7 +9,7 @@ public class UserInputModel
     [Required]
     public string Email { get; set; }
     [Required]
-    public string Name { get; set; }
+    public string GivenName { get; set; }
     [Required]
     public string Password { get; set; }
     [Required]

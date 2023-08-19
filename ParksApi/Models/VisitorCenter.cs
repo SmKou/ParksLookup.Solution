@@ -6,7 +6,7 @@ public class VisitorCenter
 {
     public int VisitorCenterId { get; set; }
     [Required]
-    public string Name { get; set; }
+    public string CenterName { get; set; }
     public string Description { get; set; }
     [Required]
     public string PhysicalAddress { get; set; }
