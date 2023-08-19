@@ -43,26 +43,22 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Put(int id, [FromBody] AccountInputModel model)
     {
         if (!ModelState.IsValid)
-        {
-            foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("DataInvalid", error.Description);
             return UnprocessableEntity(ModelState);
-        }
         if (model.UserId != id)
             return BadRequest();
         if (!_db.Parks.Any(park => park.ParkId == model.ParkId))
-            return NotFound(new { "DataInvalid" = "Park does not exist." });
+            return NotFound("Data Invalid: Park does not exist.");
         string username = model.UserName.ToLower();
         string email = model.Email.ToLower();
         if (!_db.Users.Any(user => user.NormalizedUserName == username) 
         && !_db.Users.Any(user => user.NormalizedEmail == email))
-            return NotFound(new { "DataInvalid" = "Account does not exist." });
-        string userId = userId.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return NotFound("Data Invalid: Account does not exist.");
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
         if (user == null)
-            return NotFound(new { "DataInvalid" = "Account does not exist." });
+            return NotFound("Data Invalid: Account does not exist.");
         if (user.UserName != model.UserName && user.Email != model.Email)
-            return BadRequest(new { "UpdateFailed" = "Cannot change both username and email." });
+            return BadRequest("Update Failed: Cannot change both username and email.");
 
         if (user.UserName != model.UserName)
             user.UserName = model.UserName;
@@ -75,13 +71,13 @@ public class AccountController : ControllerBase
 
         IdentityResult result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded)
-            return BadRequest(new { "UpdateFailed" = "Could not update user." });
+            return BadRequest("Update Failed: Could not update user.");
         
         if (!string.IsNullOrEmpty(model.Password) && !string.IsNullOrEmpty(model.NewPassword))
         {
             IdentityResult password = await _userManager.ChangePasswordAsync(user, model.Password, model.NewPassword);
             if (!password.Succeeded)
-                return BadRequest(new { "UpdateFailed" = "Could not update user." });
+                return BadRequest("Update Failed: Could not update user.");
         }
 
         return NoContent();
@@ -120,13 +116,9 @@ public class SeedController : ControllerBase
     public async Task<ActionResult> Post([FromBody] SeedInputModel model)
     {
         if (!ModelState.IsValid)
-        {
-            foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("DataInvalid", error.Description);
             return UnprocessableEntity(ModelState);
-        }
         if (_db.Parks.Any(park => park.ParkName == model.ParkName))
-            return BadRequest(new { "SeedInvalid" = "Park already exists." });
+            return BadRequest("Data Invalid: Park already exists.");
 
         Park park = new Park
         {
@@ -138,7 +130,7 @@ public class SeedController : ControllerBase
         _db.Parks.Add(park);
         _db.SaveChanges();
 
-        Application user = new ApplicationUser
+        ApplicationUser user = new ApplicationUser
         {
             UserName = model.UserName,
             Email = model.Email,
@@ -152,14 +144,14 @@ public class SeedController : ControllerBase
         {
             Microsoft.AspNetCore.Identity.SignInResult signin = await _signinManager.PasswordSignInAsync(model.UserName, model.Password, isPersistent: true, lockoutOnFailure: false);
             if (signin.Succeeded)
-                return Ok(new { "Token" = GenerateJSONWebToken() });
+                return Ok("Token: " + AccountController.GenerateJSONWebToken());
             else
-                return BadRequest(new { "AuthFailed" = "Could not produce token." });
+                return BadRequest("Auth Failed: Could not produce token.");
         }
         else
         {
             foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("RegistrationFailed", error.Description);
+                ModelState.AddModelError("Registration Failed", error.Description);
             return UnprocessableEntity(ModelState);
         }
     }
@@ -173,7 +165,7 @@ public class RegisterController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signinManager;
 
-    public SeedController(ParksContext db, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager)
+    public RegisterController(ParksContext db, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager)
     {
         _db = db;
         _userManager = userManager;
@@ -184,13 +176,9 @@ public class RegisterController : ControllerBase
     public async Task<ActionResult> Register([FromBody] UserInputModel model)
     {
         if (!ModelState.IsValid)
-        {
-            foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("DataInvalid", error.Description);
             return UnprocessableEntity(ModelState);
-        }
         if (!_db.Parks.Any(park => park.ParkId == model.ParkId))
-            return NotFound;
+            return NotFound();
 
         ApplicationUser user = new ApplicationUser
         {
@@ -204,16 +192,16 @@ public class RegisterController : ControllerBase
         IdentityResult result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
-            Microsoft.AspNetCore.Identity.SignInResult _signin = await signinManager.PasswordSignInAsync(model.UserName, model.Password, isPersistent: true, lockoutOnFailure: false);
+            Microsoft.AspNetCore.Identity.SignInResult signin = await _signinManager.PasswordSignInAsync(model.UserName, model.Password, isPersistent: true, lockoutOnFailure: false);
             if (signin.Succeeded)
-                return Ok(new { "Token" = AccountController.GenerateJSONWebToken() });
+                return Ok("Token: " + AccountController.GenerateJSONWebToken());
             else
-                return BadRequest(new { "AuthFailed" = "Could not produce token." });
+                return BadRequest("Auth Failed: Could not produce token.");
         }
         else
         {
             foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("RegistrationFailed", error.Description);
+                ModelState.AddModelError("Registration Failed", error.Description);
             return UnprocessableEntity(ModelState);
         }
     }
@@ -226,7 +214,7 @@ public class LoginController : ControllerBase
     private readonly ParksContext _db;
     private readonly SignInManager<ApplicationUser> _signinManager;
 
-    public SeedController(ParksContext db, SignInManager<ApplicationUser> signinManager)
+    public LoginController(ParksContext db, SignInManager<ApplicationUser> signinManager)
     {
         _db = db;
         _signinManager = signinManager;
@@ -236,11 +224,7 @@ public class LoginController : ControllerBase
     public async Task<ActionResult> Login([FromBody] LoginInputModel login)
     {
         if (!ModelState.IsValid)
-        {
-            foreach (IdentityError error in result.Errors)
-                ModelState.AddModelError("DataInvalid", error.Description);
             return UnprocessableEntity(ModelState);
-        }
         string handle = login.UserNameOrEmail;
         if (!_db.Users.Any(user => user.NormalizedUserName == handle.ToLower()
         && !_db.Users.Any(user => user.NormalizedEmail == handle.ToLower())))
@@ -251,10 +235,10 @@ public class LoginController : ControllerBase
 
         Microsoft.AspNetCore.Identity.SignInResult result = await _signinManager.PasswordSignInAsync(handle, login.Password, isPersistent: true, lockoutOnFailure: false);
         if (result.Succeeded)
-            return Ok(new { "Token" = AccountController.GenerateJSONWebToken() });
+            return Ok("Token: " + AccountController.GenerateJSONWebToken());
         else
         {
-            ModelState.AddModelError("LoginFailed", "There is something wrong with your login or password.");
+            ModelState.AddModelError("Login Failed", "There is something wrong with your login or password.");
             return UnprocessableEntity(ModelState);
         }
     }
