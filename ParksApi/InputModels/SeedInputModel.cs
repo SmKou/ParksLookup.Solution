@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using ParksApi.Models;
+
 namespace ParksApi.InputModels;
 
 public class SeedInputModel
@@ -20,7 +23,7 @@ public class SeedInputModel
     [Required]
     public string Password { get; set; }
 
-    public static Seed(ParksContext db)
+    public static void Seed(ParksContext db)
     {
         Park parkA = new Park
         {
@@ -33,8 +36,8 @@ public class SeedInputModel
         {
             Name = "Cape Krusenstern",
             Description = "North of the Arctic Circle, the monument forms 70 miles of shoreline on the Chukchi Sea.  More than 114 beach ridges provide evidence of human use for 5,000 years.  The Inupiat continue to use the area today.  Vast wetlands provide habitat for shorebirds from as far away as South America.  Hikers and boaters can see carpets of wildflowers among shrubs containing wisps of qiviut from muskoxen.",
-            State: "Alaska",
-            Directions: "Cape Krusenstern National Monument lies within a remote area of northwest Alaska and is bordered by the Arctic Ocean and Chukchi Sea. Visitors generally access the monument via the regional hub in Kotzebue. Commercial airlines provide daily service from Anchorage to Kotzebue. Chartered flights with licensed air taxi services, booked in advance, can take backcountry travelers to remote destinations within the monument."
+            State = "Alaska",
+            Directions = "Cape Krusenstern National Monument lies within a remote area of northwest Alaska and is bordered by the Arctic Ocean and Chukchi Sea. Visitors generally access the monument via the regional hub in Kotzebue. Commercial airlines provide daily service from Anchorage to Kotzebue. Chartered flights with licensed air taxi services, booked in advance, can take backcountry travelers to remote destinations within the monument."
         };
         db.Parks.AddRange(new Park[]
         {

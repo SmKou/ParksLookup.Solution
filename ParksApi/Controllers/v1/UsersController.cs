@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using ParksApi.Models;
+using ParksApi.InputModels;
+using ParksApi.ViewModels;
 
 namespace ParksApi.Controllers;
 
@@ -19,13 +22,13 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> Get([FromQuery] string name, string username)
+    public async Task<ActionResult<IEnumerable<UserViewModel>>> Get([FromQuery] string name, string username)
     {
-        return NoContent()
+        return NoContent();
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<User>> GetUser(int id)
+    public async Task<ActionResult<UserViewModel>> GetUser(int id)
     {
         return NoContent();
     }

@@ -9,6 +9,7 @@ public class ApplicationUser : IdentityUser
     // Id
     // UserName
     // Email
+    // PhoneNumber
     [Required]
     public string Name { get; set; }
     [Required]

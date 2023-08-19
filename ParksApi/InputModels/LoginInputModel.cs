@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ParksApi.InputModels;
 
 public class LoginInputModel

@@ -8,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 using ParksApi.Models;
-using ParksApi.ViewModels;
+using ParksApi.InputModels;
 
 namespace ParksApi.Controllers;
 
@@ -33,7 +33,7 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid && !_db.Parks.Any() && !_db.Centers.Any())
         {
             SeedInputModel.Seed(_db);
-            return NoContent("Database seeded.");
+            return Ok("Database seeded.");
         }
 
         if (!ModelState.IsValid)
@@ -59,11 +59,11 @@ public class AccountController : ControllerBase
         IdentityResult result = await _userManager.CreateAsync(user, seed.Password);
         if (result.Succeeded)
         {
-            SignInResult signin = await _signinManager.PasswordSignInAsync(user.UserName, user.Password, isPersistent: true, lockoutOnFailure: false);
+            Microsoft.AspNetCore.Identity.SignInResult signin = await _signinManager.PasswordSignInAsync(user, seed.Password, isPersistent: true, lockoutOnFailure: false);
             if (signin.Succeeded)
-                return Ok(GenerateJSONWebToken())
+                return Ok(GenerateJSONWebToken());
             else
-                return StatusCode(StatusCodes.Status500InternalServerError, signin.Failed)
+                return BadRequest("Could not login.");
         }
         else
         {
@@ -76,7 +76,7 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Register([FromBody] UserInputModel register)
     {
-        
+
         return NoContent();
     }
 
@@ -100,7 +100,7 @@ public class AccountController : ControllerBase
         var token = new JwtSecurityToken(
             issuer: "http://localhost:5006",
             audience: "http://localhost:5006",
-            expires: DateTime.Now.AddHours(1);
+            expires: DateTime.Now.AddHours(1),
             signingCredentials: credentials
         );
         return new JwtSecurityTokenHandler().WriteToken(token);
