@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ParksApi.Models;
 
@@ -10,9 +11,11 @@ using ParksApi.Models;
 namespace ParksApi.Migrations
 {
     [DbContext(typeof(ParksContext))]
-    partial class ParksContextModelSnapshot : ModelSnapshot
+    [Migration("20230819010523_AddDistinguishNameFields")]
+    partial class AddDistinguishNameFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
