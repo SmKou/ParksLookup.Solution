@@ -31,7 +31,7 @@ public class VisitorCentersController : ControllerBase
         return await PaginatedList<VisitorCenter>.CreateAsync(query, pageIndex, pageSize);
     }
 
-    [HttpGet("id")]
+    [HttpGet("{id}")]
     public async Task<ActionResult<VisitorCenter>> GetCenter(int id)
     {
         VisitorCenter center = await _db.Centers.FindAsync(id);
@@ -49,14 +49,14 @@ public class VisitorCentersController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("id")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> Put(int id, [FromBody] VisitorCenter center)
     {
         return NoContent();
     }
 
     [Authorize]
-    [HttpDelete("id")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         return NoContent();

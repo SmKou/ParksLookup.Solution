@@ -7,20 +7,34 @@ public class SeedInputModel
 {
     [Required]
     public string ParkName { get; set; }
+
     [Required]
     public string Description { get; set; }
+
     [Required]
     public string State { get; set; }
+
     [Required]
     public string Directions { get; set; }
 
     [Required]
     public string UserName { get; set; }
+
     [Required]
+    [EmailAddress]
+    [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Enter a valid email")]
     public string Email { get; set; }
+
     [Required]
-    public string GivenName { get; set; }
+    [RegularExpression(@"^[1-9]\d{2}-[1-9]\d{2}-\d{4}$", ErrorMessage = "Enter a valid phone number")]
+    public string PhoneNumber { get; set; }
+
     [Required]
+    public string FullName { get; set; }
+
+    [Required]
+    [DataType(DataType.Password)]
+    [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$", ErrorMessage = "Your password must contain at least 8 characters, a capital letter, a lowercase letter, a number and a special character.")]
     public string Password { get; set; }
 
     public static void Seed(ParksContext db)
@@ -29,14 +43,14 @@ public class SeedInputModel
         {
             ParkName = "Alagnak",
             Description = "The headwaters of Alagnak Wild River lie within the rugged Aleutian Range of neighboring Katmai National Park and Preserve. Meandering west towards Bristol Bay and the Bering Sea, the Alagnak traverses the beautiful Alaska Peninsula, providing an unparalleled opportunity to experience the unique wilderness, wildlife, and cultural heritage of southwest Alaska.",
-            State = "Alaska",
+            State = "alaska",
             Directions = "Alagnak Wild River is located in a remote part of the Alaska Peninsula, about 290 miles southwest of Anchorage. Access is by boat or small floatplane."
         };
         Park parkB = new Park
         {
             ParkName = "Cape Krusenstern",
             Description = "North of the Arctic Circle, the monument forms 70 miles of shoreline on the Chukchi Sea.  More than 114 beach ridges provide evidence of human use for 5,000 years.  The Inupiat continue to use the area today.  Vast wetlands provide habitat for shorebirds from as far away as South America.  Hikers and boaters can see carpets of wildflowers among shrubs containing wisps of qiviut from muskoxen.",
-            State = "Alaska",
+            State = "alaska",
             Directions = "Cape Krusenstern National Monument lies within a remote area of northwest Alaska and is bordered by the Arctic Ocean and Chukchi Sea. Visitors generally access the monument via the regional hub in Kotzebue. Commercial airlines provide daily service from Anchorage to Kotzebue. Chartered flights with licensed air taxi services, booked in advance, can take backcountry travelers to remote destinations within the monument."
         };
         db.Parks.AddRange(new Park[]
@@ -60,7 +74,7 @@ public class SeedInputModel
             Description = "Large, half-dome shaped, blue and grey building with just over 11,000 square feet of space. The museum space is just over 1,800 square feet and contains animal displays, soundscapes, tactile exhibits and more. The Heritage Center also contains a bookstore, restroom, art gallery, and sitting area. The Northwest Arctic Heritage Center serves as the visitor centers for the Western Arctic National Parklands: Kobuk Valley National Park, Cape Krusenstern National Monument, and Noatak National Preserve.",
             PhysicalAddress = "171 3rd Ave Kotzebue, AK 99752",
             MailingAddress = "PO Box 1029 Kotzebue, AK 99752",
-            PhoneNumber = "907 442-3890",
+            PhoneNumber = "907-442-3890",
             ParkId = 2
         };
         db.Centers.AddRange(new VisitorCenter[] 

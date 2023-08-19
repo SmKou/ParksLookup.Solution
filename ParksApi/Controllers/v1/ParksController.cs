@@ -35,7 +35,7 @@ public class ParksController : ControllerBase
         return await PaginatedList<Park>.CreateAsync(query, pageIndex, pageSize);
     }
 
-    [HttpGet("id")]
+    [HttpGet("{id}")]
     public async Task<ActionResult<Park>> GetPark(int id)
     {
         Park park = await _db.Parks.FindAsync(id);
@@ -45,8 +45,8 @@ public class ParksController : ControllerBase
             return Ok(park);
     }
 
-    [Authorize]
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<Park>> Post([FromBody] Park park)
     {
         return NoContent();
