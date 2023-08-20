@@ -61,7 +61,6 @@ public class AccountController : ControllerBase
                 .Where(entry => entry.NormalizedUserName.Contains(username) && entry.GivenName.Contains(name))
                 .Select(user => new UserViewModel
                 {
-                    UserId = user.Id,
                     FullName = user.GivenName,
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
@@ -71,28 +70,28 @@ public class AccountController : ControllerBase
             if (parkid != 0 && _db.Parks.Any(park => park.ParkId == parkid))
                 query = query.Where(entry => entry.ParkId == parkid);
 
-            return await PaginatedList<UserViewModel>.CreateAsync(query, pageIndex, pageSize);
+            PaginatedList<UserViewModel> model = await PaginatedList<UserViewModel>.CreateAsync(query, pageIndex, pageSize);
+            return Ok(model);
         }
 
         return BadRequest("A purpose must be provided.");
     }
 
     [Authorize]
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UserViewModel>> GetAccount(int id)
+    [HttpGet("{username}")]
+    public async Task<ActionResult<UserViewModel>> GetAccount(string username)
     {
         string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         ApplicationUser account = await _userManager.FindByIdAsync(userId);
         if (account == null)
             return Unauthorized();
 
-        ApplicationUser user = await _userManager.FindByIdAsync(id);
+        ApplicationUser user = await _userManager.FindByNameAsync(username);
         if (user == null)
             return NotFound();
 
         UserViewModel model = new UserViewModel
         {
-            UserId = user.Id,
             FullName = user.GivenName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
@@ -105,30 +104,27 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] UserInputModel model)
     {
-        TempData["Confirmed"] = true;
+        model.IsConfirmedEmployee = true;
         return RedirectToRoute(new { action = "Register", controller = "Register", model = model });
     }
 
     [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Put(int id, [FromBody] AccountInputModel model)
+    [HttpPut("{username}")]
+    public async Task<IActionResult> Put(string username, [FromBody] AccountInputModel model)
     {
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
-        if (model.UserId != id)
+        if (model.UserName != username)
             return BadRequest();
         if (!_db.Parks.Any(park => park.ParkId == model.ParkId))
             return NotFound("Data Invalid: Park does not exist.");
-        string username = model.UserName.ToLower();
-        string email = model.Email.ToLower();
-        if (!_db.Users.Any(user => user.NormalizedUserName == username) 
-        && !_db.Users.Any(user => user.NormalizedEmail == email))
-            return NotFound("Data Invalid: Account does not exist.");
+            
         string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user.Id != id)
+        string normalize = username.ToUpper();
+        if (user.NormalizedUserName != normalize)
             return Unauthorized("Cannot modify another user's account.");
-        if (user.UserName != model.UserName && user.Email != model.Email)
+        if (user.NormalizedUserName != normalize && user.NormalizedEmail != model.Email.ToUpper())
             return BadRequest("Update Invalid: Cannot change both username and email.");
 
         if (user.UserName != model.UserName)
@@ -151,18 +147,22 @@ public class AccountController : ControllerBase
                 return BadRequest("Update Failed: Could not update user.");
         }
 
-        return NoContent();
+        return Ok("User updated");
     }
 
     [Authorize]
-    [HttpDelete]
-    public async Task<ActionResult> Delete(int id)
+    [HttpDelete("{username}")]
+    public async Task<ActionResult> Delete(string username)
     {
         string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user.Id != id)
+        if (user.NormalizedUserName != username.ToUpper())
             return Unauthorized("Cannot delete another user's account.");
-        return await _userManager.DeleteAsync(user);
+        IdentityResult result = await _userManager.DeleteAsync(user);
+        if (result.Succeeded)
+            return Ok("User deleted");
+        else
+            return BadRequest("User could not be deleted.");
     }
 
     public static string GenerateJSONWebToken()
@@ -283,7 +283,7 @@ public class RegisterController : ControllerBase
             PhoneNumber = model.PhoneNumber,
             GivenName = model.GivenName,
             ParkId = model.ParkId,
-            IsConfirmedEmployee = TempData["Confirmed"] != null ? TempData["Confirmed"] : false
+            IsConfirmedEmployee = model.IsConfirmedEmployee != null ? model.IsConfirmedEmployee : false
         };
         IdentityResult result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
@@ -308,11 +308,13 @@ public class RegisterController : ControllerBase
 public class LoginController : ControllerBase
 {
     private readonly ParksContext _db;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signinManager;
 
-    public LoginController(ParksContext db, SignInManager<ApplicationUser> signinManager)
+    public LoginController(ParksContext db, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signinManager)
     {
         _db = db;
+        _userManager = userManager;
         _signinManager = signinManager;
     }
 
@@ -348,6 +350,6 @@ public class LoginController : ControllerBase
         if (user == null)
             return NotFound();
         await _signinManager.SignOutAsync();
-        return Ok("User logged out.")
+        return Ok("User logged out.");
     }
 }

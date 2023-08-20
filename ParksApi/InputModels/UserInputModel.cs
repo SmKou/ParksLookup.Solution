@@ -26,4 +26,6 @@ public class UserInputModel
     
     [Required]
     public int ParkId { get; set; }
+
+    public bool IsConfirmedEmployee { get; set; }
 }
