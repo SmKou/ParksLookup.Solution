@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ParksApi.InputModels;
+namespace ParksApi.Models;
 
 public class AccountInputModel : UserInputModel
 {

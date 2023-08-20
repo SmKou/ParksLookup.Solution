@@ -14,55 +14,61 @@ public class ParksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Park>>> Get([FromQuery] string name, string state, string sortOrder, int pageSize, int pageIndex)
+    public async Task<ActionResult<IEnumerable<ParkViewModel>>> Get([FromQuery] string name, string state, string type, string sortOrder, int pageSize, int pageIndex)
     {
         
         IQueryable<Park> query = _db.Parks.AsQueryable();
         if (!string.IsNullOrEmpty(name))
-            query = query.Where(entry => entry.ParkName.Contains(name));
+            query = query.Where(entry => entry.FullName.Contains(name));
         if (!string.IsNullOrEmpty(state))
         {
-            state = state.ToLower();
-            query = query.Where(entry => entry.State == state);
+            state = state.ToUpper();
+            query = query.Where(entry => entry.StateCode.Contains(state));
+        }
+        if (!string.IsNullOrEmpty(type))
+        {
+            if (type == "state")
+                query = query.Where(entry => entry.IsStatePark);
+            else if (type == "national")
+                query = query.Where(entry => !entry.IsStatePark);
         }
         if (!string.IsNullOrEmpty(sortOrder))
         {
-            if (sortOrder == "desc")
-                query = query.OrderByDescending(entry => entry.ParkName);
-            else
-                query = query.OrderBy(entry => entry.ParkName);
+            switch (sortOrder)
+            {
+                case "desc":
+                    query = query.OrderByDescending(entry => entry.FullName);
+                    break;
+                default:
+                    query = query.OrderBy(entry => entry.FullName);
+                    break;
+            }
         }
-        return await PaginatedList<Park>.CreateAsync(query, pageIndex, pageSize);
+        IQueryable<ParkViewModel> model = query.Select(entry => new ParkViewModel
+        {
+            ParkCode = entry.ParkCode,
+            Type = entry.IsStatePark ? "state" : "national",
+            StateCode = entry.StateCode,
+            FullName = entry.FullName,
+            Description = entry.Description
+        });
+        return await PaginatedList<ParkViewModel>.CreateAsync(model, pageIndex, pageSize);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Park>> GetPark(int id)
+    [HttpGet("{code}")]
+    public async Task<ActionResult<ParkViewModel>> GetPark(string code)
     {
-        Park park = await _db.Parks.FindAsync(id);
+        Park park = await _db.Parks.SingleOrDefaultAsync(entry => entry.ParkCode == code);
         if (park == null)
             return NotFound();
-        else
-            return Ok(park);
-    }
-
-    [Authorize]
-    [HttpPost]
-    public async Task<ActionResult<Park>> Post([FromBody] Park park)
-    {
-        return NoContent();
-    }
-
-    [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Put(int id, [FromBody] Park park)
-    {
-        return NoContent();
-    }
-
-    [Authorize]
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        return NoContent();
+        ParkViewModel model = new ParkViewModel
+        {
+            ParkCode = park.ParkCode,
+            Type = park.IsStatePark ? "state" : "national",
+            StateCode = park.StateCode,
+            FullName = park.FullName,
+            Description = park.Description
+        };
+        return Ok(model);
     }
 }

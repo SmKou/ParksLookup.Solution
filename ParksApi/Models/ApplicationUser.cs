@@ -11,9 +11,6 @@ public class ApplicationUser : IdentityUser
     // Email
     // PhoneNumber
     [Required]
-    public string GivenName { get; set; }
-    [Required]
-    public int ParkId { get; set; }
-    [Required]
-    public bool IsConfirmedEmployee { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 }

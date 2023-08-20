@@ -4,13 +4,15 @@ namespace ParksApi.Models;
 
 public class Park
 {
-    public int ParkId { get; set; }
+    public int Id { get; set; }
     [Required]
-    public string ParkName { get; set; }
+    public string ParkCode { get; set; }
+    [Required]
+    public bool IsStatePark { get; set; }
+    [Required]
+    public string StateCode { get; set; }
+    [Required]
+    public string FullName { get; set; }
     [Required]
     public string Description { get; set; }
-    [Required]
-    public string State { get; set; }
-    [Required]
-    public string Directions { get; set; }
 }

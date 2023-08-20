@@ -1,12 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ParksApi.InputModels;
+namespace ParksApi.Models;
 
 public class LoginInputModel
 {
-    [Required]
-    public int UserId { get; set; }
-
     [Required]
     public string UserNameOrEmail { get; set; }
     

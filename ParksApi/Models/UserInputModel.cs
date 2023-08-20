@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ParksApi.InputModels;
+namespace ParksApi.Models;
 
 public class UserInputModel
 {
@@ -17,15 +17,11 @@ public class UserInputModel
     public string PhoneNumber { get; set; }
 
     [Required]
-    public string GivenName { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 
     [Required]
     [DataType(DataType.Password)]
     [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$", ErrorMessage = "Your password must contain at least 8 characters, a capital letter, a lowercase letter, a number and a special character.")]
     public string Password { get; set; }
-    
-    [Required]
-    public int ParkId { get; set; }
-
-    public bool IsConfirmedEmployee { get; set; }
 }
