@@ -15,6 +15,7 @@ namespace ParksApi.Controllers;
 
 [Route("api/v{version:ApiVersion}/[controller]")]
 [ApiVersion("1.0")]
+[Authorize]
 public class AccountController : ControllerBase
 {
     private readonly ParksContext _db;
@@ -29,55 +30,38 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> Get([FromQuery] string purpose,
+    public async Task<ActionResult> Get([FromQuery]
     string name, string username, int parkid, int pageSize, int pageIndex)
     {
-        if (purpose == "seed")
-        {
-            if (!_db.Parks.Any() && !_db.Centers.Any())
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        ApplicationUser user = await _userManager.FindByIdAsync(userId);
+        if (user == null || !user.IsConfirmedEmployee)
+            return Unauthorized();
+
+        if (string.IsNullOrEmpty(name))
+            name = "";
+        if (string.IsNullOrEmpty(username))
+            username = "";
+
+        IQueryable<UserViewModel> query = _db.Users
+            .AsQueryable()
+            .OrderBy(entry => entry.GivenName)
+            .Where(entry => entry.NormalizedUserName.Contains(username) && entry.GivenName.Contains(name))
+            .Select(user => new UserViewModel
             {
-                SeedInputModel.Seed(_db);
-                return Ok("Data seeded.");
-            }
-            else
-                return BadRequest("Data already seeded.");
-        }
-        
-        if (purpose == "lookup")
-        {
-            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            ApplicationUser user = await _userManager.FindByIdAsync(userId);
-            if (user == null || !user.IsConfirmedEmployee)
-                return Unauthorized();
+                FullName = user.GivenName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                ParkId = user.ParkId
+            });
 
-            if (string.IsNullOrEmpty(name))
-                name = "";
-            if (string.IsNullOrEmpty(username))
-                username = "";
+        if (parkid != 0 && _db.Parks.Any(park => park.ParkId == parkid))
+            query = query.Where(entry => entry.ParkId == parkid);
 
-            IQueryable<UserViewModel> query = _db.Users
-                .AsQueryable()
-                .OrderBy(entry => entry.GivenName)
-                .Where(entry => entry.NormalizedUserName.Contains(username) && entry.GivenName.Contains(name))
-                .Select(user => new UserViewModel
-                {
-                    FullName = user.GivenName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    ParkId = user.ParkId
-                });
-
-            if (parkid != 0 && _db.Parks.Any(park => park.ParkId == parkid))
-                query = query.Where(entry => entry.ParkId == parkid);
-
-            PaginatedList<UserViewModel> model = await PaginatedList<UserViewModel>.CreateAsync(query, pageIndex, pageSize);
-            return Ok(model);
-        }
-
-        return BadRequest("A purpose must be provided.");
+        PaginatedList<UserViewModel> model = await PaginatedList<UserViewModel>.CreateAsync(query, pageIndex, pageSize);
+        return Ok(model);
     }
 
-    [Authorize]
     [HttpGet("{username}")]
     public async Task<ActionResult<UserViewModel>> GetAccount(string username)
     {
@@ -100,7 +84,6 @@ public class AccountController : ControllerBase
         return Ok(model);
     }
 
-    [Authorize]
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] UserInputModel model)
     {
@@ -108,7 +91,6 @@ public class AccountController : ControllerBase
         return RedirectToRoute(new { action = "Register", controller = "Register", model = model });
     }
 
-    [Authorize]
     [HttpPut("{username}")]
     public async Task<IActionResult> Put(string username, [FromBody] AccountInputModel model)
     {
@@ -150,7 +132,6 @@ public class AccountController : ControllerBase
         return Ok("User updated");
     }
 
-    [Authorize]
     [HttpDelete("{username}")]
     public async Task<ActionResult> Delete(string username)
     {
