@@ -6,7 +6,9 @@ By: Stella Marie
 - C# 12
 - ASP.NET Core 7
   - EntityFrameworkCore
+  - Identity
   - MySQL
+
 
 ## Description
 
@@ -15,31 +17,31 @@ Swagger: http://localhost:5006/swagger/
 
 ParksLookup is a web api for retrieving and submitting information about state and national parks.
 
+**Features Implemented**
+- Versioning
+- Pagination
+- JWT Token Authentication
+
 **Active port:** http://localhost:5006/api/v1/
 
 ### Account (authentication)
-| Method    | URL format            | Action                                |
-| --------- | --------------------- | ------------------------------------- |
-| GET       | .../account/          | Depends on purpose                    |
-| GET       | .../account/{id}      | Returns user information              |
-| POST      | .../account/          | Create a confirmed user (req. auth)   |
-| PUT       | .../account/{id}      | Update user information (req. auth)   |
-| DELETE    | .../account/{id}      | Delete user account (req. auth)       |
-| Extensions                                                                |
-| GET       | .../account/seed/     | Confirm user (req. auth)              |
-| POST      | .../account/seed/     | Create park and unconfirmed account   |
-| POST      | .../account/register/ | Create new unconfirmed account        |
-| POST      | .../account/login/    | Log into account                      |
-| DELETE    | .../account/login/    | Log out of account                    |
+| Method    | URL format                | Action                                |
+| --------- | ------------------------- | ------------------------------------- |
+| GET       | .../account/              | Returns list of users (req.auth)      |
+| GET       | .../account/{username}    | Returns user information (req. auth)  |
+| POST      | .../account/              | Create a confirmed user (req. auth)   |
+| PUT       | .../account/{username}    | Update user information (req. auth)   |
+| DELETE    | .../account/{username}    | Delete user account (req. auth)       |
+| Extensions                                                                    |
+| GET       | .../account/seed/         | Confirm user (req. auth)              |
+| POST      | .../account/seed/         | Create park and unconfirmed account   |
+| POST      | .../account/register/     | Create new unconfirmed account        |
+| POST      | .../account/login/        | Log into account                      |
+| DELETE    | .../account/login/        | Log out of account                    |
 
 By default, accounts are unconfirmed unless created by another user. It is assumed that users are park employees. Until a user has been confirmed with GET .../account/seed, they cannot create, update or delete any parks or visitor centers. Note: This is a development hack.
 
 **Queries for: .../account?**
-
-Parameter: purpose
-Required - Supported values: seed, lookup
-- seed: Seeds database with two sample parks and visitor centers
-- lookup: Returns a sorted list of users (req. signin and confirmed account)
 
 Parameter: name
 Not required - Returns users whose name contains the searched name
