@@ -13,6 +13,16 @@ public class ParksController : ControllerBase
         _db = db;
     }
 
+    /// <summary>
+    /// Gets list of parks based on params
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="state"></param>
+    /// <param name="type"></param>
+    /// <param name="sortOrder"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <returns>List of parks</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ParkViewModel>>> Get([FromQuery] string name, string state, string type, string sortOrder, int pageSize, int pageIndex)
     {
@@ -55,6 +65,11 @@ public class ParksController : ControllerBase
         return await PaginatedList<ParkViewModel>.CreateAsync(model, pageIndex, pageSize);
     }
 
+    /// <summary>
+    /// Get park information of specified parkcode
+    /// </summary>
+    /// <param name="code"></param>
+    /// <returns>Park information</returns>
     [HttpGet("{code}")]
     public async Task<ActionResult<ParkViewModel>> GetPark(string code)
     {

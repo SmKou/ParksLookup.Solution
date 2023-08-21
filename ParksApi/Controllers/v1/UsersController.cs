@@ -4,6 +4,7 @@ using ParksApi.Models;
 
 namespace ParksApi.Controllers;
 
+[ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiVersion("1.0")]
 [Authorize]
@@ -18,6 +19,17 @@ public class UsersController : ControllerBase
         _userManager = userManager;
     }
 
+    /// <summary>
+    /// Gets list of parks user saved and can be filtered with params
+    /// </summary>
+    /// <param name="model"></param>
+    /// <param name="name"></param>
+    /// <param name="state"></param>
+    /// <param name="type"></param>
+    /// <param name="sortOrder"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <returns>List of parks</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ParkViewModel>>> Get([FromBody] LoginInputModel model, [FromQuery] string name, string state, string type, string sortOrder, int pageSize, int pageIndex)
     {
@@ -74,6 +86,11 @@ public class UsersController : ControllerBase
         return await PaginatedList<ParkViewModel>.CreateAsync(query, pageIndex, pageSize);
     }
 
+    /// <summary>
+    /// Add parks to user's list
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>Status code</returns>
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] ParksInputModel model)
     {
@@ -107,6 +124,11 @@ public class UsersController : ControllerBase
         return Ok("Park(s) added to user list");
     }
 
+    /// <summary>
+    /// Remove parks from user's list
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>Status code</returns>
     [HttpDelete]
     public async Task<ActionResult> Delete([FromBody] ParksInputModel model)
     {

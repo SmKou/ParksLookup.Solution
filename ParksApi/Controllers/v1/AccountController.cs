@@ -11,6 +11,7 @@ using ParksApi.Models;
 
 namespace ParksApi.Controllers;
 
+[ApiController]
 [Route("api/v{version:ApiVersion}/[controller]")]
 [ApiVersion("1.0")]
 [Authorize]
@@ -26,7 +27,12 @@ public class AccountController : ControllerBase
         _userManager = userManager;
         _signinManager = signinManager;
     }
-
+    
+    /// <summary>
+    /// Gets user information (requires auth)
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>User information</returns>
     [HttpGet]
     public async Task<ActionResult<UserViewModel>> Get([FromBody] LoginInputModel model)
     {
@@ -51,6 +57,11 @@ public class AccountController : ControllerBase
         return Ok(view);
     }
 
+    /// <summary>
+    /// Updates user information. Cannot change username and email in the same update.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>Status code</returns>
     [HttpPut]
     public async Task<IActionResult> Put([FromBody] AccountInputModel model)
     {
@@ -88,6 +99,11 @@ public class AccountController : ControllerBase
         return Ok("User updated");
     }
 
+    /// <summary>
+    /// Deletes user's account
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>Status code</returns>
     [HttpDelete]
     public async Task<ActionResult> Delete([FromBody] LoginInputModel model)
     {
@@ -123,6 +139,7 @@ public class AccountController : ControllerBase
     }
 }
 
+[ApiController]
 [Route("api/v{version:apiVersion}/account/[controller]")]
 [ApiVersion("1.0")]
 public class RegisterController : ControllerBase
@@ -138,6 +155,11 @@ public class RegisterController : ControllerBase
         _signinManager = signinManager;
     }
 
+    /// <summary>
+    /// Creates a new user account
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns>One-hour token</returns>
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] UserInputModel model)
     {
@@ -170,6 +192,7 @@ public class RegisterController : ControllerBase
     }
 }
 
+[ApiController]
 [Route("api/v{version:apiVersion}/account/[controller]")]
 [ApiVersion("1.0")]
 public class LoginController : ControllerBase
@@ -185,6 +208,11 @@ public class LoginController : ControllerBase
         _signinManager = signinManager;
     }
 
+    /// <summary>
+    /// Logs a user in
+    /// </summary>
+    /// <param name="login"></param>
+    /// <returns>One-hour token</returns>
     [HttpPost]
     public async Task<ActionResult> Post([FromBody] LoginInputModel login)
     {
@@ -209,6 +237,7 @@ public class LoginController : ControllerBase
     }
 }
 
+[ApiController]
 [Route("api/v{version:apiVersion}/account/[controller]")]
 [ApiVersion("1.0")]
 public class SeedController : ControllerBase
@@ -220,6 +249,10 @@ public class SeedController : ControllerBase
         _db = db;
     }
 
+    /// <summary>
+    /// Seeds database with sample data.
+    /// </summary>
+    /// <returns>Status Code</returns>
     [HttpGet]
     public async Task<ActionResult> Get()
     {
