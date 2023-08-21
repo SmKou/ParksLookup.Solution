@@ -57,7 +57,7 @@ public class AccountController : ControllerBase
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
 
-        ApplicationUser user = await _userManager.FindByEmailAsync(model.UserName);
+        ApplicationUser user = await _userManager.FindByNameAsync(model.UserName);
         if (user == null)
             return NotFound();
         if (!string.IsNullOrEmpty(model.NewUserName) && !string.IsNullOrEmpty(model.NewEmail))
@@ -98,6 +98,10 @@ public class AccountController : ControllerBase
             if (user == null)
                 return NotFound();
         }
+
+        List<UserPark> parklist = _db.UserParks.Where(entry => entry.User == user).ToList();
+        _db.UserParks.RemoveRange(parklist);
+
         IdentityResult result = await _userManager.DeleteAsync(user);
         if (result.Succeeded)
             return Ok("Account deleted");

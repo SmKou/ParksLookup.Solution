@@ -11,8 +11,8 @@ using ParksApi.Models;
 namespace ParksApi.Migrations
 {
     [DbContext(typeof(ParksContext))]
-    [Migration("20230821021509_Initial")]
-    partial class Initial
+    [Migration("20230821042311_InitialWithUser")]
+    partial class InitialWithUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -260,10 +260,12 @@ namespace ParksApi.Migrations
                     b.Property<string>("ParkCode")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("UserName")
-                        .HasColumnType("longtext");
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("UserParkId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("UserParks");
                 });
@@ -317,6 +319,15 @@ namespace ParksApi.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ParksApi.Models.UserPark", b =>
+                {
+                    b.HasOne("ParksApi.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

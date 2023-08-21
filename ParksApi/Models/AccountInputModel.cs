@@ -5,6 +5,8 @@ namespace ParksApi.Models;
 public class AccountInputModel : UserInputModel
 {
     public string NewUserName { get; set; }
+    [EmailAddress]
+    [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Enter a valid email")]
     public string NewEmail { get; set; }
 
     [Required]
