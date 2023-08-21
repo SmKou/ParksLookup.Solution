@@ -9,92 +9,79 @@ By: Stella Marie
   - Identity
   - MySQL
 
-
 ## Description
 
 Swagger: http://localhost:5006/swagger/
 + http://localhost:5006/swagger/v1/swagger.json
 
-ParksLookup is a web api for retrieving and submitting information about state and national parks.
+ParksLookup is a web api for looking up state and national parks. Anyone can view park information and search through parks. Users can save parks to a list for quick access to.
+
+Note: This project is not seeded. To test its functionality, first make a call to GET http://localhost:5006/api/v1/account/seed.
 
 **Features Implemented**
 - Versioning
 - Pagination
 - JWT Token Authentication
 
+Please note that swagger documentation is not indicative of how to use this api. **Status:** Broken
+
 **Active port:** http://localhost:5006/api/v1/
 
 ### Account (authentication)
 | Method    | URL format                | Action                                |
 | --------- | ------------------------- | ------------------------------------- |
-| GET       | .../account/              | Returns list of users (req.auth)      |
 | GET       | .../account/{username}    | Returns user information (req. auth)  |
-| POST      | .../account/              | Create a confirmed user (req. auth)   |
 | PUT       | .../account/{username}    | Update user information (req. auth)   |
 | DELETE    | .../account/{username}    | Delete user account (req. auth)       |
 | Extensions                                                                    |
-| GET       | .../account/seed/         | Confirm user (req. auth)              |
-| POST      | .../account/seed/         | Create park and unconfirmed account   |
-| POST      | .../account/register/     | Create new unconfirmed account        |
+| POST      | .../account/register/     | Create user account                   |
 | POST      | .../account/login/        | Log into account                      |
-| DELETE    | .../account/login/        | Log out of account                    |
 
-By default, accounts are unconfirmed unless created by another user. It is assumed that users are park employees. Until a user has been confirmed with GET .../account/seed, they cannot create, update or delete any parks or visitor centers. Note: This is a development hack.
-
-**Queries for: .../account?**
-
-Parameter: name
-Not required - Returns users whose name contains the searched name
-
-Parameter: username
-Not required - Returns users whose username contains the search term
-
-Parameter: parkid
-Not required - Return users working for a specified park
-
-Parameter: pageSize
-Not required - Returns sorted list of users sectioned by given number (default: 10)
-
-Parameter: pageIndex
-Not required - Returns section of sorted list (default: 1)
+For authorization, you will need an account and a token. In every request, provide the token in the header as the value of Bearer Token, and in the body, provide at least login credentials.
 
 ### Parks
-| Method    | URL format        | Action                        |
-| --------- | ----------------- | ----------------------------- |
-| GET       | .../parks/        | Return list of all parks      |
-| GET       | .../parks/{id}    | Return park information       |
-| POST      | .../parks/        | Create new park (req. auth)   |
-| PUT       | .../parks/{id}    | Update park info (req. auth)  |
-| DELETE    | .../parks/{id}    | Delete park (req. auth)       |
 
-To create, update or delete park information requires a confirmed user account. Only an affiliated user can update or delete park information. Every account can only be affiliated with one park.
+**Note**: Users cannot create, update or delete parks. However, since the database isn't hosted, when setting up the project, there will be no data in the database. For demonstration purposes, make a call to GET .../account/seed to seed the database. If already seeded, it will return "Database already seeded".
+
+| Method    | URL format                | Action                                |
+| --------- | ------------------------- | ------------------------------------- |
+| GET       | .../parks/                | Returns list of parks                 |
+| GET       | .../parks/{parkcode}      | Returns park information              |
+
 
 **Queries for: .../parks?**
 
 Parameter: name
-Not required - Returns parks containing the search term in their name
+Not required - Returns list of parks containing the search term in their name
 
 Parameter: state
-Not required - Returns parks located in the given state
+Not required - Returns list of parks containing the state in their statecode
 
-### Visitor Centers
-| Method    | URL format                | Action                            |
-| --------- | ------------------------- | --------------------------------- |
-| GET       | .../visitorcenters/       | Return list of visitor centers    |
-| GET       | .../visitorcenters/{id}   | Return visitor center information |
-| POST      | .../visitorcenters/       | Create new center (req. auth)     |
-| PUT       | .../visitorcenters/{id}   | Update center info (req. auth)    |
-| DELETE    | .../visitorcenters/{id}   | Delete park (req. auth)           |
+Parameter: type (state | national)
+Not required - Returns list of parks either state or national
 
-To create, update or delete visitor center information requires a confirmed user account. Only an affiliated user can update or delete visitor center information. Visitor Centers can only be affiliated with one park.
+Parameter: sortorder
+Not required - Returns sorted list of parks ordered by name
 
-**Queries for: .../visitorcenters?**
+Parameter: pagesize
+Not required - Returns listing of parks of a given size (default = 10)
 
-Parameter: name
-Not required - Returns visitor centers containing the search term in their name
+Parameter: pageindex
+Not required - Returns portion of listing of parks sectioned by pagesize (default = 1)
 
-Parameter: park
-Not required - Returns visitor centers at parks containing the search term in their name
+### Users (Authorization required)
+
+You will need an account and a token to access the users api. Every request requires the JWT token in the header as the value of Bearer Token, and in the body, at least provide the login credentials.
+
+| Method    | URL format                | Action                                |
+| --------- | ------------------------- | ------------------------------------- |
+| GET       | .../users/{username}      | Return list of parks user has saved   |
+| POST      | .../users/                | Add park to user's list               |
+| DELETE    | .../users/                | Delete park from user's list          |
+
+**Queries for: .../users/{username}/**
+
+Refer to Parks queries. Same parameters apply, except that the list is the user's list of parks.
 
 <br>
 
@@ -139,9 +126,16 @@ dotnet ef migrations add Initial
 dotnet ef database update
 ```
 
+### Environment Variables
+
+This api uses the NPS (National Park Services) api for looking up national parks.
+
 ### Run the App
 
-Once you have a database setup and the connection string included in the appsettings.json, you can run the app:
+Required:
+- Database created with migrations
+- Connection string in appsettings.json
+- EnvironmentVariables.cs
 
 - Navigate to main page of repo
 - Either fork or clone project to local directory
@@ -156,6 +150,8 @@ If the app does not launch in the browser:
 ## Known Bugs
 
 Please report any issues in using the app.
+
+- Swagger documentation
 
 ## License
 
