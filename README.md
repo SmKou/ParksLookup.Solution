@@ -126,10 +126,6 @@ dotnet ef migrations add Initial
 dotnet ef database update
 ```
 
-### Environment Variables
-
-This api uses the NPS (National Park Services) api for looking up national parks.
-
 ### Run the App
 
 Required:
