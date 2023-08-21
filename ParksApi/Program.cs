@@ -56,7 +56,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = "http://localhost:5006",
         ValidIssuer = "http://localhost:5006",
         ClockSkew = TimeSpan.Zero,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Kou.dBlueParks"))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Kou.dBlueParksLookupApiCodeReview"))
     };
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

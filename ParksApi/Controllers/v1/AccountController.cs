@@ -27,47 +27,46 @@ public class AccountController : ControllerBase
         _signinManager = signinManager;
     }
 
-    [HttpGet("{username}")]
-    public async Task<ActionResult<UserViewModel>> Get(string username)
+    [HttpGet]
+    public async Task<ActionResult<UserViewModel>> Get([FromBody] LoginInputModel model)
     {
-        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        ApplicationUser account = await _userManager.FindByIdAsync(userId);
-        if (account == null || account.UserName.ToLower() != username.ToLower())
-            return Unauthorized();
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid login");
 
-        ApplicationUser user = await _userManager.FindByNameAsync(username);
-        if (user == null || user.UserName != username)
-            return NotFound();
+        ApplicationUser user = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
+        if (user == null)
+        {
+            user = await _userManager.FindByNameAsync(model.UserNameOrEmail);
+            if (user == null)
+                return NotFound();
+        }
 
-        UserViewModel model = new UserViewModel
+        UserViewModel view = new UserViewModel
         {
             UserName = user.UserName,
             FullName = user.FirstName + " " + user.LastName,
             Email = user.Email,
             PhoneNumber = user.PhoneNumber
         };
-        return Ok(model);
+        return Ok(view);
     }
 
-    [HttpPut("{username}")]
-    public async Task<IActionResult> Put(string username, [FromBody] AccountInputModel model)
+    [HttpPut]
+    public async Task<IActionResult> Put([FromBody] AccountInputModel model)
     {
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
-        if (model.UserName != username)
-            return BadRequest();
-            
-        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user.NormalizedUserName != model.UserName.ToUpper())
-            return Unauthorized("Cannot modify another user's account");
-        if (user.NormalizedUserName != model.UserName.ToUpper() && user.NormalizedEmail != model.Email.ToUpper())
+
+        ApplicationUser user = await _userManager.FindByEmailAsync(model.UserName);
+        if (user == null)
+            return NotFound();
+        if (!string.IsNullOrEmpty(model.NewUserName) && !string.IsNullOrEmpty(model.NewEmail))
             return BadRequest("Update Invalid: Cannot change both username and email");
 
-        if (user.UserName != model.UserName)
-            user.UserName = model.UserName;
-        else if (user.Email != model.Email)
-            user.Email = model.Email;
+        if (!string.IsNullOrEmpty(model.NewUserName) && model.UserName != model.NewUserName)
+            user.UserName = model.NewUserName;
+        else if (!string.IsNullOrEmpty(model.NewEmail) && model.Email != model.NewEmail)
+            user.Email = model.NewEmail;
         if (user.PhoneNumber != model.PhoneNumber)
             user.PhoneNumber = model.PhoneNumber;
         if (user.FirstName != model.FirstName)
@@ -89,13 +88,16 @@ public class AccountController : ControllerBase
         return Ok("User updated");
     }
 
-    [HttpDelete("{username}")]
-    public async Task<ActionResult> Delete(string username)
+    [HttpDelete]
+    public async Task<ActionResult> Delete([FromBody] LoginInputModel model)
     {
-        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user.NormalizedUserName != username.ToUpper())
-            return Unauthorized("Cannot delete another user's account");
+        ApplicationUser user = await _userManager.FindByEmailAsync(model.UserNameOrEmail);
+        if (user == null)
+        {
+            user = await _userManager.FindByNameAsync(model.UserNameOrEmail);
+            if (user == null)
+                return NotFound();
+        }
         IdentityResult result = await _userManager.DeleteAsync(user);
         if (result.Succeeded)
             return Ok("Account deleted");
@@ -105,7 +107,7 @@ public class AccountController : ControllerBase
 
     public static string GenerateJSONWebToken()
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Kou.dBlueParksLookupApi"));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Kou.dBlueParksLookupApiCodeReview"));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
             issuer: "http://localhost:5006",
@@ -133,7 +135,7 @@ public class RegisterController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Register([FromBody] UserInputModel model)
+    public async Task<ActionResult> Post([FromBody] UserInputModel model)
     {
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
@@ -200,18 +202,6 @@ public class LoginController : ControllerBase
             ModelState.AddModelError("Login Failed", "There is something wrong with your login or password.");
             return UnprocessableEntity(ModelState);
         }
-    }
-
-    [Authorize]
-    [HttpDelete]
-    public async Task<ActionResult> Delete()
-    {
-        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        ApplicationUser user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-            return NotFound();
-        await _signinManager.SignOutAsync();
-        return Ok("User logged out.");
     }
 }
 
